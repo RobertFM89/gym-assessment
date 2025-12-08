@@ -1,0 +1,15 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AssessmentForm from '../components/AssessmentForm';
+---
+
+<Layout title="Valoración Física - Gimnasio">
+	<main class="container mx-auto px-4 py-8">
+		<header class="text-center mb-10">
+			<h1 class="text-4xl font-bold text-blue-600 mb-2">Informe de Valoración Física</h1>
+			<p class="text-gray-600">Completa el formulario para generar tu informe personalizado</p>
+		</header>
+		
+		<AssessmentForm client:only="react" />
+	</main>
+</Layout>

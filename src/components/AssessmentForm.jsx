@@ -130,7 +130,8 @@ export default function AssessmentForm() {
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
 
       const pageHeight = 297;
@@ -149,14 +150,15 @@ export default function AssessmentForm() {
         if (section.offsetHeight === 0) continue;
 
         const canvas = await html2canvas(section, {
-          scale: 2,
+          scale: 1.5, // Reduced scale for better file size
           logging: false,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff' // Ensure white background
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        // Use JPEG with compression instead of PNG
+        const imgData = canvas.toDataURL('image/jpeg', 0.7);
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
         // Check if we need a new page
@@ -165,7 +167,7 @@ export default function AssessmentForm() {
           currentY = margin;
         }
 
-        pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, imgHeight, undefined, 'FAST');
         currentY += imgHeight + 5; // Add small gap between sections
       }
 

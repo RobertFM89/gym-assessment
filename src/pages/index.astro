@@ -1,15 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import AssessmentForm from '../components/AssessmentForm';
+import logo from '../assets/V_Blanco_verde.png';
 ---
 
-<Layout title="Valoración Física - Gimnasio">
-	<main class="container mx-auto px-4 py-8">
-		<header class="text-center mb-10">
-			<h1 class="text-4xl font-bold text-blue-600 mb-2">Informe de Valoración Física</h1>
-			<p class="text-gray-600">Completa el formulario para generar tu informe personalizado</p>
-		</header>
-		
-		<AssessmentForm client:only="react" />
+<Layout title="Bienvenido - Valoración Física">
+	<main class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-600 to-green-800">
+		<div class="text-center p-8">
+			<div class="mb-12 p-12 rounded-full bg-white/70 backdrop-blur-sm inline-block">
+				<img src={logo.src} alt="Logo Gimnasio" class="w-64 h-64 object-contain mx-auto drop-shadow-lg" />
+			</div>
+			
+			<div class="space-y-6">
+				<h1 class="text-4xl md:text-5xl font-bold text-white mb-8 tracking-tight">
+					Sistema de Valoración Física
+				</h1>
+				
+				<a 
+					href="/assessment" 
+					class="inline-block bg-white text-green-700 hover:bg-gray-50 hover:text-green-800 font-bold py-4 px-12 rounded-full text-xl transition-all shadow-lg hover:shadow-2xl transform hover:-translate-y-1 border-2 border-transparent hover:border-green-200"
+				>
+					Comenzar Valoración
+				</a>
+			</div>
+		</div>
 	</main>
 </Layout>

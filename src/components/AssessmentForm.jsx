@@ -1,9 +1,9 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Download, Activity, User, Scale, Calendar, Target, FileText, Ruler, Heart, Brain, Dumbbell, ClipboardList, Plus, Trash2, Bold, Italic, Underline } from 'lucide-react';
+import { Download, Activity, User, Scale, Calendar, Target, FileText, Ruler, Heart, Brain, Dumbbell, ClipboardList, Plus, Trash2, Bold, Italic, Underline, Image as ImageIcon, X } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import logoHorizontal from '../assets/V_Horizontal_Blancoyverde.png';
+import logo from '../assets/V_Blanco_verde.png';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -104,25 +104,26 @@ export default function AssessmentForm() {
         { id: 'bodyComp', name: 'Comp. Corporal', value: 5 }
       ]
     },
-    capabilities: {
-      fuerza: 5,
-      cardio: 5,
-      flexibilidad: 5,
-      resistencia: 5,
-      equilibrio: 5
-    },
+    capabilities: [
+      { id: 'fuerza', name: 'Fuerza', value: 5 },
+      { id: 'cardio', name: 'Cardio', value: 5 },
+      { id: 'flexibilidad', name: 'Flexibilidad', value: 5 },
+      { id: 'resistencia', name: 'Resistencia', value: 5 },
+      { id: 'equilibrio', name: 'Equilibrio', value: 5 }
+    ],
     functionalAssessment: '',
     strengthTest: '',
-    composition: {
-      weight: '',
-      fatPercentage: '',
-      muscleMass: '',
-      waterPercentage: '',
-      boneMass: '',
-      metabolicAge: '',
-      visceralFat: ''
-    },
-    workProposal: ''
+    composition: [
+      { id: 'weight', name: 'Peso', value: '', unit: 'kg' },
+      { id: 'fatPercentage', name: '% Masa Grasa', value: '', unit: '%' },
+      { id: 'muscleMass', name: 'Masa Muscular', value: '', unit: 'kg' },
+      { id: 'waterPercentage', name: '% Agua Corporal', value: '', unit: '%' },
+      { id: 'boneMass', name: 'Masa Ósea', value: '', unit: 'kg' },
+      { id: 'metabolicAge', name: 'Edad Metabólica', value: '', unit: 'años' },
+      { id: 'visceralFat', name: 'Grasa Visceral', value: '', unit: '' }
+    ],
+    workProposal: '',
+    photos: []
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -176,17 +177,51 @@ export default function AssessmentForm() {
     }));
   };
 
-  const handleCapabilityChange = (key, value) => {
+  const handleCapabilityChange = (id, field, value) => {
     setFormData(prev => ({
       ...prev,
-      capabilities: { ...prev.capabilities, [key]: parseInt(value) }
+      capabilities: prev.capabilities.map(c => 
+        c.id === id ? { ...c, [field]: field === 'value' ? parseInt(value) : value } : c
+      )
     }));
   };
 
-  const handleCompositionChange = (key, value) => {
+  const addCapability = () => {
+    const newId = `cap-${Date.now()}`;
     setFormData(prev => ({
       ...prev,
-      composition: { ...prev.composition, [key]: parseFloat(value) || 0 }
+      capabilities: [...prev.capabilities, { id: newId, name: 'Nueva Capacidad', value: 5 }]
+    }));
+  };
+
+  const removeCapability = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      capabilities: prev.capabilities.filter(c => c.id !== id)
+    }));
+  };
+
+  const handleCompositionChange = (id, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      composition: prev.composition.map(c => 
+        c.id === id ? { ...c, [field]: value } : c
+      )
+    }));
+  };
+
+  const addCompositionVariable = () => {
+    const newId = `comp-${Date.now()}`;
+    setFormData(prev => ({
+      ...prev,
+      composition: [...prev.composition, { id: newId, name: 'Nueva Variable', value: '', unit: '' }]
+    }));
+  };
+
+  const removeCompositionVariable = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      composition: prev.composition.filter(c => c.id !== id)
     }));
   };
 
@@ -195,10 +230,45 @@ export default function AssessmentForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePhotoUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + formData.photos.length > 3) {
+      alert('Solo puedes subir un máximo de 3 fotos.');
+      return;
+    }
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...prev.photos, { url: reader.result, caption: '' }]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoCaptionChange = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.map((photo, i) => 
+        i === index ? { ...photo, caption: value } : photo
+      )
+    }));
+  };
+
+  const removePhoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+
   const radarData = useMemo(() => {
-    return Object.entries(formData.capabilities).map(([key, value]) => ({
-      subject: key.charAt(0).toUpperCase() + key.slice(1),
-      A: value,
+    return formData.capabilities.map(cap => ({
+      subject: cap.name,
+      A: cap.value,
       fullMark: 10,
     }));
   }, [formData.capabilities]);
@@ -210,13 +280,6 @@ export default function AssessmentForm() {
       fullMark: 10,
     }));
   }, [formData.lifestyle.factors]);
-
-  const pieData = useMemo(() => {
-    return Object.entries(formData.composition).map(([key, value]) => ({
-      name: key.charAt(0).toUpperCase() + key.slice(1),
-      value: value
-    }));
-  }, [formData.composition]);
 
   const generatePDF = async () => {
     if (!reportRef.current) return;
@@ -502,21 +565,51 @@ export default function AssessmentForm() {
               <Activity className="w-5 h-5 text-blue-500" />
               Datos Gráfico Físico (1-10)
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(formData.capabilities).map(([key, value]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{key}</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={value}
-                    onChange={(e) => handleCapabilityChange(key, e.target.value)}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="text-right text-sm text-gray-500">{value}/10</div>
-                </div>
-              ))}
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="block text-sm font-medium text-gray-700">Capacidades Físicas</label>
+                <button
+                  onClick={addCapability}
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Añadir Capacidad
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {formData.capabilities.map((cap) => (
+                  <div key={cap.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <input
+                        type="text"
+                        value={cap.name}
+                        onChange={(e) => handleCapabilityChange(cap.id, 'name', e.target.value)}
+                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Nombre de capacidad"
+                      />
+                      <button
+                        onClick={() => removeCapability(cap.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Eliminar capacidad"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={cap.value}
+                        onChange={(e) => handleCapabilityChange(cap.id, 'value', e.target.value)}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-sm font-medium text-gray-600 w-8 text-right">{cap.value}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -528,69 +621,55 @@ export default function AssessmentForm() {
               <Scale className="w-5 h-5 text-blue-500" />
               Composición Corporal
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
-                <input
-                  type="number"
-                  value={formData.composition.weight}
-                  onChange={(e) => handleCompositionChange('weight', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="block text-sm font-medium text-gray-700">Variables de Composición</label>
+                <button
+                  onClick={addCompositionVariable}
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Añadir Variable
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">% Masa Grasa</label>
-                <input
-                  type="number"
-                  value={formData.composition.fatPercentage}
-                  onChange={(e) => handleCompositionChange('fatPercentage', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Masa Muscular (kg)</label>
-                <input
-                  type="number"
-                  value={formData.composition.muscleMass}
-                  onChange={(e) => handleCompositionChange('muscleMass', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">% Agua Corporal</label>
-                <input
-                  type="number"
-                  value={formData.composition.waterPercentage}
-                  onChange={(e) => handleCompositionChange('waterPercentage', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Masa Ósea (kg)</label>
-                <input
-                  type="number"
-                  value={formData.composition.boneMass}
-                  onChange={(e) => handleCompositionChange('boneMass', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Edad Metabólica (años)</label>
-                <input
-                  type="number"
-                  value={formData.composition.metabolicAge}
-                  onChange={(e) => handleCompositionChange('metabolicAge', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Grasa Visceral</label>
-                <input
-                  type="number"
-                  value={formData.composition.visceralFat}
-                  onChange={(e) => handleCompositionChange('visceralFat', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {formData.composition.map((item) => (
+                  <div key={item.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => handleCompositionChange(item.id, 'name', e.target.value)}
+                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Nombre variable"
+                      />
+                      <button
+                        onClick={() => removeCompositionVariable(item.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Eliminar variable"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={item.value}
+                        onChange={(e) => handleCompositionChange(item.id, 'value', e.target.value)}
+                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Valor"
+                      />
+                      <input
+                        type="text"
+                        value={item.unit}
+                        onChange={(e) => handleCompositionChange(item.id, 'unit', e.target.value)}
+                        className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Unidad"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -611,6 +690,64 @@ export default function AssessmentForm() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="Propuesta detallada de trabajo..."
             ></textarea>
+          </div>
+
+          <hr className="border-gray-200" />
+
+          {/* Photo Gallery Upload */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-blue-500" />
+              Galería Fotográfica (Máx. 3)
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Plus className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click para subir</span></p>
+                    <p className="text-xs text-gray-500">JPG, PNG, WEBP, BMP (MAX. 3 fotos)</p>
+                  </div>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/png, image/jpeg, image/webp, image/bmp, image/heic, image/heif"
+                    multiple
+                    onChange={handlePhotoUpload}
+                    disabled={formData.photos.length >= 3}
+                  />
+                </label>
+              </div>
+
+              {formData.photos.length > 0 && (
+                <div className="space-y-3">
+                  {formData.photos.map((photo, index) => (
+                    <div key={index} className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                      <img 
+                        src={photo.url} 
+                        alt={`Upload ${index + 1}`} 
+                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                      />
+                      <input
+                        type="text"
+                        value={photo.caption}
+                        onChange={(e) => handlePhotoCaptionChange(index, e.target.value)}
+                        placeholder="Escribe un pie de foto..."
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        onClick={() => removePhoto(index)}
+                        className="text-red-500 hover:text-red-700 p-2"
+                        title="Eliminar foto"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -641,7 +778,7 @@ export default function AssessmentForm() {
             {/* Header Report */}
             <div className="flex justify-between items-center mb-8 border-b pb-6 report-section p-4">
               <div className="bg-green-100 px-4 rounded-lg">
-                <img src={logoHorizontal.src} alt="Logo" className="h-48 object-contain" />
+                <img src={logo.src} alt="Logo" className="h-48 object-contain" />
               </div>
               <div className="text-right">
                 <h1 className="text-2xl font-bold text-gray-800">Informe de Valoración</h1>
@@ -699,34 +836,14 @@ export default function AssessmentForm() {
             <div className="mb-6 report-section p-4">
               <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">7. Composición Corporal</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">Peso</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.weight || '-'} <span className="text-xs font-normal">kg</span></div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">% Grasa</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.fatPercentage || '-'} <span className="text-xs font-normal">%</span></div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">Masa Muscular</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.muscleMass || '-'} <span className="text-xs font-normal">kg</span></div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">% Agua</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.waterPercentage || '-'} <span className="text-xs font-normal">%</span></div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">Masa Ósea</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.boneMass || '-'} <span className="text-xs font-normal">kg</span></div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">Edad Metabólica</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.metabolicAge || '-'} <span className="text-xs font-normal">años</span></div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="text-gray-500 text-xs mb-1">Grasa Visceral</div>
-                  <div className="font-bold text-lg text-gray-800">{formData.composition.visceralFat || '-'}</div>
-                </div>
+                {formData.composition.map((item) => (
+                  <div key={item.id} className="bg-gray-50 p-3 rounded-lg text-center">
+                    <div className="text-gray-500 text-xs mb-1">{item.name}</div>
+                    <div className="font-bold text-lg text-gray-800">
+                      {item.value || '-'} <span className="text-xs font-normal">{item.unit}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -780,6 +897,31 @@ export default function AssessmentForm() {
               <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">10. Propuesta de Trabajo</h2>
               <p className="text-gray-700 text-sm whitespace-pre-wrap">{formData.workProposal || 'Se definirá en base a los resultados.'}</p>
             </div>
+
+            {/* 11. Galería Fotográfica */}
+            {formData.photos.length > 0 && (
+              <div className="mb-6 report-section p-4 break-inside-avoid">
+                <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">11. Galería Fotográfica</h2>
+                <div className="flex gap-4 justify-center items-start">
+                  {formData.photos.map((photo, index) => (
+                    <div key={index} className="flex-1 flex flex-col gap-2 min-w-0">
+                      <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden w-full">
+                        <img 
+                          src={photo.url} 
+                          alt={`Foto ${index + 1}`} 
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                      {photo.caption && (
+                        <p className="text-center text-sm text-gray-600 italic px-1 break-words w-full">
+                          {photo.caption}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="mt-12 pt-6 border-t text-center text-xs text-gray-400 report-section p-4">

@@ -4,6 +4,7 @@ import { Download, Activity, User, Scale, Calendar, Target, FileText, Ruler, Hea
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import logo from '../assets/V_Blanco_verde.png';
+import logoBlack from '../assets/logo-fitnessgoals-ES.png'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -284,8 +285,26 @@ export default function AssessmentForm() {
   const generatePDF = async () => {
     if (!reportRef.current) return;
     setIsGenerating(true);
+    let clone = null;
 
     try {
+      // Create a clone of the report to force desktop layout
+      const originalReport = reportRef.current;
+      clone = originalReport.cloneNode(true);
+      
+      // Set fixed width on the clone to simulate desktop (A4-like width)
+      // 800px is the maxWidth used in the desktop view
+      clone.style.width = '800px';
+      clone.style.maxWidth = '800px';
+      clone.style.position = 'absolute';
+      clone.style.top = '-10000px';
+      clone.style.left = '0';
+      clone.style.zIndex = '-1';
+      clone.style.backgroundColor = '#ffffff';
+      
+      // Append to body so html2canvas can render it
+      document.body.appendChild(clone);
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -300,7 +319,8 @@ export default function AssessmentForm() {
       
       let currentY = margin;
 
-      const sections = reportRef.current.querySelectorAll('.report-section');
+      // Query sections from the CLONE instead of the original
+      const sections = clone.querySelectorAll('.report-section');
       
       for (let i = 0; i < sections.length; i++) {
         const section = sections[i];
@@ -309,15 +329,17 @@ export default function AssessmentForm() {
         if (section.offsetHeight === 0) continue;
 
         const canvas = await html2canvas(section, {
-          scale: 1.5, // Reduced scale for better file size
+          scale: 2, // Higher scale for better quality
           logging: false,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#ffffff' // Ensure white background
+          backgroundColor: '#ffffff',
+          windowWidth: 1200, // Simulate desktop window width to trigger correct media queries
+          width: 800 // Force width of the canvas capture
         });
 
         // Use JPEG with compression instead of PNG
-        const imgData = canvas.toDataURL('image/jpeg', 0.7);
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
         // Check if we need a new page
@@ -335,6 +357,10 @@ export default function AssessmentForm() {
       console.error('Error generating PDF:', error);
       alert('Hubo un error al generar el PDF. Por favor intenta de nuevo.');
     } finally {
+      // Clean up the clone
+      if (clone && clone.parentNode) {
+        clone.parentNode.removeChild(clone);
+      }
       setIsGenerating(false);
     }
   };
@@ -776,71 +802,140 @@ export default function AssessmentForm() {
             style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}
           >
             {/* Header Report */}
-            <div className="flex justify-between items-center mb-8 border-b pb-6 report-section p-4">
-              <div className="bg-green-100 px-4 rounded-lg">
-                <img src={logo.src} alt="Logo" className="h-48 object-contain" />
+            <div className="bg-gradient-to-r from-green-700 to-green-900 text-white p-8 rounded-t-xl flex flex-col sm:flex-row justify-between items-center mb-8 report-section gap-6 shadow-lg">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="bg-white p-3 rounded-xl shadow-md transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                   <img src={logoBlack.src} alt="Logo" className="h-24 w-auto object-contain" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-2xl font-bold tracking-tight">Informe de Valoración</h1>
+                  <p className="text-green-100 mt-1 text-lg font-light">Análisis Físico y Planificación</p>
+                </div>
               </div>
-              <div className="text-right">
-                <h1 className="text-2xl font-bold text-gray-800">Informe de Valoración</h1>
-                <div className="text-sm text-gray-500 mt-1">Fecha: {formData.personal.date}</div>
+              <div className="text-center sm:text-right bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
+                <div className="text-xs text-green-200 uppercase tracking-wider font-bold mb-1">Fecha del Informe</div>
+                <div className="text-sm font-bold font-mono">{formData.personal.date}</div>
               </div>
             </div>
 
             {/* 1. Datos Personales */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">1. Datos Personales</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="font-semibold text-gray-600">Nombre:</span> {formData.personal.name}</div>
-                <div><span className="font-semibold text-gray-600">Edad:</span> {formData.personal.age} años</div>
-                <div><span className="font-semibold text-gray-600">Peso:</span> {formData.personal.weight} kg</div>
-                <div><span className="font-semibold text-gray-600">Altura:</span> {formData.personal.height} cm</div>
-                <div><span className="font-semibold text-gray-600">Teléfono:</span> {formData.personal.phone}</div>
-                <div><span className="font-semibold text-gray-600">Email:</span> {formData.personal.email}</div>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <User className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">1. Datos Personales</h2>
+              </div>
+              <div className="bg-green-50/50 p-6 rounded-xl border border-green-100 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                  <div className="flex justify-between border-b border-green-200 pb-2">
+                    <span className="font-semibold text-green-700">Nombre</span>
+                    <span className="text-gray-700 font-medium">{formData.personal.name}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-green-200 pb-2">
+                    <span className="font-semibold text-green-700">Edad</span>
+                    <span className="text-gray-700 font-medium">{formData.personal.age} años</span>
+                  </div>
+                  <div className="flex justify-between border-b border-green-200 pb-2">
+                    <span className="font-semibold text-green-700">Peso</span>
+                    <span className="text-gray-700 font-medium">{formData.personal.weight} kg</span>
+                  </div>
+                  <div className="flex justify-between border-b border-green-200 pb-2">
+                    <span className="font-semibold text-green-700">Altura</span>
+                    <span className="text-gray-700 font-medium">{formData.personal.height} cm</span>
+                  </div>
+                  <div className="flex justify-between border-b border-green-200 pb-2">
+                    <span className="font-semibold text-green-700">Teléfono</span>
+                    <span className="text-gray-700 font-medium">{formData.personal.phone}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-green-200 pb-2">
+                    <span className="font-semibold text-green-700">Email</span>
+                    <span className="text-gray-700 font-medium">{formData.personal.email}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* 2. Patologías */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">2. Patologías y Antecedentes</h2>
-              <p className="text-gray-700 text-sm whitespace-pre-wrap">{formData.pathologies || 'Sin antecedentes relevantes registrados.'}</p>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Heart className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">2. Patologías y Antecedentes</h2>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-sm">
+                <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{formData.pathologies || 'Sin antecedentes relevantes registrados.'}</p>
+              </div>
             </div>
 
             {/* 3. Objetivo Principal */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">3. Objetivo Principal</h2>
-              <p className="text-gray-700 text-sm">{formData.personal.objectives || 'No especificado.'}</p>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Target className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">3. Objetivo Principal</h2>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-white p-6 rounded-xl border border-green-100 shadow-sm">
+                <p className="text-gray-800 font-medium text-lg">{formData.personal.objectives || 'No especificado.'}</p>
+              </div>
             </div>
 
             {/* 4. Estilo de Vida */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">4. Estilo de Vida</h2>
-              <p className="text-gray-700 text-sm whitespace-pre-wrap">{formData.lifestyle.description || 'No se ha proporcionado descripción.'}</p>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Brain className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">4. Estilo de Vida</h2>
+              </div>
+              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{formData.lifestyle.description || 'No se ha proporcionado descripción.'}</p>
+              </div>
             </div>
 
             {/* 5. Valoración Funcional */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">5. Valoración Funcional</h2>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">5. Valoración Funcional</h2>
+              </div>
               <div 
-                className="text-gray-700 text-sm whitespace-pre-wrap"
+                className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-gray-700 text-sm whitespace-pre-wrap leading-relaxed prose prose-green max-w-none"
                 dangerouslySetInnerHTML={{ __html: formData.functionalAssessment || 'Pendiente de valoración.' }}
               />
             </div>
 
             {/* 6. Test de Fuerza */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">6. Test de Fuerza y Control Motor</h2>
-              <p className="text-gray-700 text-sm whitespace-pre-wrap">{formData.strengthTest || 'Pendiente de realización.'}</p>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Dumbbell className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">6. Test de Fuerza y Control Motor</h2>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-sm">
+                <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{formData.strengthTest || 'Pendiente de realización.'}</p>
+              </div>
             </div>
 
             {/* 7. Composición Corporal */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">7. Composición Corporal</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Scale className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">7. Composición Corporal</h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                 {formData.composition.map((item) => (
-                  <div key={item.id} className="bg-gray-50 p-3 rounded-lg text-center">
-                    <div className="text-gray-500 text-xs mb-1">{item.name}</div>
-                    <div className="font-bold text-lg text-gray-800">
-                      {item.value || '-'} <span className="text-xs font-normal">{item.unit}</span>
+                  <div key={item.id} className="bg-white p-4 rounded-xl border border-green-100 shadow-sm hover:shadow-md transition-shadow text-center group">
+                    <div className="text-green-600 text-xs font-semibold uppercase tracking-wide mb-2 group-hover:text-green-700">{item.name}</div>
+                    <div className="font-bold text-2xl text-gray-800 group-hover:text-green-800 transition-colors">
+                      {item.value || '-'} <span className="text-sm font-medium text-gray-400">{item.unit}</span>
                     </div>
                   </div>
                 ))}
@@ -848,22 +943,25 @@ export default function AssessmentForm() {
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 break-inside-avoid report-section p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 break-inside-avoid report-section px-8">
               {/* 8. Gráfico Valoración Física */}
-              <div className="flex flex-col items-center">
-                <h3 className="text-lg font-semibold mb-2 text-gray-700">8. Valoración Física</h3>
+              <div className="flex flex-col items-center bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <h3 className="text-lg font-bold mb-4 text-green-800 flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  8. Valoración Física
+                </h3>
                 <div className="w-full h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#4b5563', fontSize: 10 }} />
+                      <PolarGrid stroke="#e5e7eb" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#374151', fontSize: 11, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} />
                       <Radar
                         name="Físico"
                         dataKey="A"
-                        stroke="#3b82f6"
-                        fill="#3b82f6"
-                        fillOpacity={0.5}
+                        stroke="#15803d"
+                        fill="#15803d"
+                        fillOpacity={0.4}
                       />
                     </RadarChart>
                   </ResponsiveContainer>
@@ -871,20 +969,23 @@ export default function AssessmentForm() {
               </div>
 
               {/* 9. Gráfico Estilo de Vida */}
-              <div className="flex flex-col items-center">
-                <h3 className="text-lg font-semibold mb-2 text-gray-700">9. Estilo de Vida</h3>
+              <div className="flex flex-col items-center bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <h3 className="text-lg font-bold mb-4 text-green-800 flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  9. Estilo de Vida
+                </h3>
                 <div className="w-full h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={lifestyleData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#4b5563', fontSize: 10 }} />
+                      <PolarGrid stroke="#e5e7eb" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#374151', fontSize: 11, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} />
                       <Radar
                         name="Estilo Vida"
                         dataKey="A"
-                        stroke="#10b981"
-                        fill="#10b981"
-                        fillOpacity={0.5}
+                        stroke="#059669"
+                        fill="#059669"
+                        fillOpacity={0.4}
                       />
                     </RadarChart>
                   </ResponsiveContainer>
@@ -893,19 +994,31 @@ export default function AssessmentForm() {
             </div>
 
             {/* 10. Propuesta de Trabajo */}
-            <div className="mb-6 report-section p-4">
-              <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">10. Propuesta de Trabajo</h2>
-              <p className="text-gray-700 text-sm whitespace-pre-wrap">{formData.workProposal || 'Se definirá en base a los resultados.'}</p>
+            <div className="mb-8 report-section px-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-green-800">10. Propuesta de Trabajo</h2>
+              </div>
+              <div className="bg-green-50 p-6 rounded-xl border border-green-200 shadow-sm">
+                <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed font-medium">{formData.workProposal || 'Se definirá en base a los resultados.'}</p>
+              </div>
             </div>
 
             {/* 11. Galería Fotográfica */}
             {formData.photos.length > 0 && (
-              <div className="mb-6 report-section p-4 break-inside-avoid">
-                <h2 className="text-xl font-bold text-blue-800 mb-3 border-b border-blue-100 pb-2">11. Galería Fotográfica</h2>
-                <div className="flex gap-4 justify-center items-start">
+              <div className="mb-8 report-section px-8 break-inside-avoid">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-xl font-bold text-green-800">11. Galería Fotográfica</h2>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                   {formData.photos.map((photo, index) => (
-                    <div key={index} className="flex-1 flex flex-col gap-2 min-w-0">
-                      <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden w-full">
+                    <div key={index} className="flex-1 flex flex-col gap-2 min-w-0 w-full sm:w-auto bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                      <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden w-full">
                         <img 
                           src={photo.url} 
                           alt={`Foto ${index + 1}`} 
@@ -913,7 +1026,7 @@ export default function AssessmentForm() {
                         />
                       </div>
                       {photo.caption && (
-                        <p className="text-center text-sm text-gray-600 italic px-1 break-words w-full">
+                        <p className="text-center text-sm text-gray-600 italic px-1 break-words w-full mt-2">
                           {photo.caption}
                         </p>
                       )}
@@ -924,8 +1037,8 @@ export default function AssessmentForm() {
             )}
 
             {/* Footer */}
-            <div className="mt-12 pt-6 border-t text-center text-xs text-gray-400 report-section p-4">
-              <p>Informe generado por Sistema de Valoración Física</p>
+            <div className="mt-12 pt-6 border-t border-gray-100 text-center report-section p-4 bg-gray-50 rounded-b-xl">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-widest">Informe generado por Fitness Goals</p>
             </div>
           </div>
         </div>

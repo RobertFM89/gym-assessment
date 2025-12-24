@@ -957,8 +957,8 @@ export default function AssessmentForm() {
                       <Radar
                         name="Físico"
                         dataKey="A"
-                        stroke="#15803d"
-                        fill="#15803d"
+                        stroke="#2563eb"
+                        fill="#2563eb"
                         fillOpacity={0.4}
                       />
                     </RadarChart>
@@ -981,8 +981,8 @@ export default function AssessmentForm() {
                       <Radar
                         name="Estilo Vida"
                         dataKey="A"
-                        stroke="#059669"
-                        fill="#059669"
+                        stroke="#16a34a"
+                        fill="#16a34a"
                         fillOpacity={0.4}
                       />
                     </RadarChart>

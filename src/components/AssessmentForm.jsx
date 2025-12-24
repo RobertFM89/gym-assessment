@@ -791,7 +791,7 @@ export default function AssessmentForm() {
             style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}
           >
             {/* Header Report */}
-            <div className="bg-gradient-to-r from-green-700 to-green-900 text-white p-8 rounded-t-xl flex flex-col sm:flex-row justify-between items-center mb-8 report-section gap-6 shadow-lg">
+            <div className="bg-gradient-to-r from-green-900 to-green-600 text-white p-8 rounded-t-xl flex flex-col sm:flex-row justify-between items-center mb-8 report-section gap-6 shadow-lg">
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="bg-white p-3 rounded-xl shadow-md">
                    <img src={logoBlack.src} alt="Logo" className="h-24 w-auto object-contain" />
@@ -930,9 +930,9 @@ export default function AssessmentForm() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                 {formData.composition.map((item) => (
-                  <div key={item.id} className="bg-white p-4 rounded-xl border border-green-100 shadow-sm hover:shadow-md transition-shadow text-center group">
-                    <div className="text-green-600 text-xs font-semibold uppercase tracking-wide mb-2 group-hover:text-green-700">{item.name}</div>
-                    <div className="font-bold text-2xl text-gray-800 group-hover:text-green-800 transition-colors">
+                  <div key={item.id} className="bg-white p-4 rounded-xl border border-green-100 shadow-sm text-center group">
+                    <div className="text-green-600 text-xs font-semibold uppercase tracking-wide mb-2">{item.name}</div>
+                    <div className="font-bold text-2xl text-gray-800">
                       {item.value || '-'} <span className="text-sm font-medium text-gray-400">{item.unit}</span>
                     </div>
                   </div>
@@ -957,8 +957,8 @@ export default function AssessmentForm() {
                       <Radar
                         name="Físico"
                         dataKey="A"
-                        stroke="#15803d"
-                        fill="#15803d"
+                        stroke="#2563eb"
+                        fill="#2563eb"
                         fillOpacity={0.4}
                       />
                     </RadarChart>
@@ -981,8 +981,8 @@ export default function AssessmentForm() {
                       <Radar
                         name="Estilo Vida"
                         dataKey="A"
-                        stroke="#059669"
-                        fill="#059669"
+                        stroke="#16a34a"
+                        fill="#16a34a"
                         fillOpacity={0.4}
                       />
                     </RadarChart>

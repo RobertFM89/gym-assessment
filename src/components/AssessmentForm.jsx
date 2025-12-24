@@ -472,14 +472,11 @@ export default function AssessmentForm() {
               <Heart className="w-5 h-5 text-blue-500" />
               Patologías y Antecedentes
             </h3>
-            <textarea
-              name="pathologies"
+            <RichTextEditor
               value={formData.pathologies}
-              onChange={handleTextChange}
-              rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              onChange={(value) => setFormData(prev => ({ ...prev, pathologies: value }))}
               placeholder="Describa patologías o antecedentes relevantes..."
-            ></textarea>
+            />
           </div>
 
           <hr className="border-gray-200" />
@@ -493,13 +490,11 @@ export default function AssessmentForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Descripción General</label>
-                <textarea
+                <RichTextEditor
                   value={formData.lifestyle.description}
-                  onChange={(e) => handleLifestyleDescriptionChange(e.target.value)}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(value) => handleLifestyleDescriptionChange(value)}
                   placeholder="Describa el estilo de vida actual..."
-                ></textarea>
+                />
               </div>
               
               <div className="space-y-3">
@@ -573,14 +568,11 @@ export default function AssessmentForm() {
               <Dumbbell className="w-5 h-5 text-blue-500" />
               Test de Fuerza y Control Motor
             </h3>
-            <textarea
-              name="strengthTest"
+            <RichTextEditor
               value={formData.strengthTest}
-              onChange={handleTextChange}
-              rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              onChange={(value) => setFormData(prev => ({ ...prev, strengthTest: value }))}
               placeholder="Resultados de los tests de fuerza..."
-            ></textarea>
+            />
           </div>
 
           <hr className="border-gray-200" />
@@ -708,14 +700,11 @@ export default function AssessmentForm() {
               <ClipboardList className="w-5 h-5 text-blue-500" />
               Propuesta de Trabajo
             </h3>
-            <textarea
-              name="workProposal"
+            <RichTextEditor
               value={formData.workProposal}
-              onChange={handleTextChange}
-              rows="4"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              onChange={(value) => setFormData(prev => ({ ...prev, workProposal: value }))}
               placeholder="Propuesta detallada de trabajo..."
-            ></textarea>
+            />
           </div>
 
           <hr className="border-gray-200" />
@@ -804,12 +793,12 @@ export default function AssessmentForm() {
             {/* Header Report */}
             <div className="bg-gradient-to-r from-green-700 to-green-900 text-white p-8 rounded-t-xl flex flex-col sm:flex-row justify-between items-center mb-8 report-section gap-6 shadow-lg">
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="bg-white p-3 rounded-xl shadow-md transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                <div className="bg-white p-3 rounded-xl shadow-md">
                    <img src={logoBlack.src} alt="Logo" className="h-24 w-auto object-contain" />
                 </div>
                 <div className="text-center sm:text-left">
                   <h1 className="text-2xl font-bold tracking-tight">Informe de Valoración</h1>
-                  <p className="text-green-100 mt-1 text-lg font-light">Análisis Físico y Planificación</p>
+                  <p className="text-green-100 mt-1 text-sm font-light">Análisis Físico y Planificación</p>
                 </div>
               </div>
               <div className="text-center sm:text-right bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
@@ -865,7 +854,10 @@ export default function AssessmentForm() {
                 <h2 className="text-xl font-bold text-green-800">2. Patologías y Antecedentes</h2>
               </div>
               <div className="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-sm">
-                <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{formData.pathologies || 'Sin antecedentes relevantes registrados.'}</p>
+                <div 
+                  className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed prose prose-green max-w-none"
+                  dangerouslySetInnerHTML={{ __html: formData.pathologies || 'Sin antecedentes relevantes registrados.' }}
+                />
               </div>
             </div>
 
@@ -891,7 +883,10 @@ export default function AssessmentForm() {
                 <h2 className="text-xl font-bold text-green-800">4. Estilo de Vida</h2>
               </div>
               <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{formData.lifestyle.description || 'No se ha proporcionado descripción.'}</p>
+                <div 
+                  className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed prose prose-green max-w-none"
+                  dangerouslySetInnerHTML={{ __html: formData.lifestyle.description || 'No se ha proporcionado descripción.' }}
+                />
               </div>
             </div>
 
@@ -918,7 +913,10 @@ export default function AssessmentForm() {
                 <h2 className="text-xl font-bold text-green-800">6. Test de Fuerza y Control Motor</h2>
               </div>
               <div className="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-sm">
-                <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{formData.strengthTest || 'Pendiente de realización.'}</p>
+                <div 
+                  className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed prose prose-green max-w-none"
+                  dangerouslySetInnerHTML={{ __html: formData.strengthTest || 'Pendiente de realización.' }}
+                />
               </div>
             </div>
 
@@ -1002,7 +1000,10 @@ export default function AssessmentForm() {
                 <h2 className="text-xl font-bold text-green-800">10. Propuesta de Trabajo</h2>
               </div>
               <div className="bg-green-50 p-6 rounded-xl border border-green-200 shadow-sm">
-                <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed font-medium">{formData.workProposal || 'Se definirá en base a los resultados.'}</p>
+                <div 
+                  className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed font-medium prose prose-green max-w-none"
+                  dangerouslySetInnerHTML={{ __html: formData.workProposal || 'Se definirá en base a los resultados.' }}
+                />
               </div>
             </div>
 

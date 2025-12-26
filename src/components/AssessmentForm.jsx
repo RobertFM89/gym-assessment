@@ -106,11 +106,13 @@ export default function AssessmentForm() {
       ]
     },
     capabilities: [
-      { id: 'fuerza', name: 'Fuerza', value: 5 },
-      { id: 'cardio', name: 'Cardio', value: 5 },
       { id: 'flexibilidad', name: 'Flexibilidad', value: 5 },
-      { id: 'resistencia', name: 'Resistencia', value: 5 },
-      { id: 'equilibrio', name: 'Equilibrio', value: 5 }
+      { id: 'cardio', name: 'Cardio', value: 5 },
+      { id: 'equilibrio', name: 'Equilibrio', value: 5 },
+       { id: 'resistencia', name: 'Resistencia', value: 5 },
+      { id: 'fuerza', name: 'Fuerza', value: 5 },
+     
+      
     ],
     functionalAssessment: '',
     strengthTest: '',
@@ -296,6 +298,8 @@ export default function AssessmentForm() {
       // 800px is the maxWidth used in the desktop view
       clone.style.width = '800px';
       clone.style.maxWidth = '800px';
+      clone.style.margin = '0';
+      clone.style.padding = '0';
       clone.style.position = 'absolute';
       clone.style.top = '-10000px';
       clone.style.left = '0';
@@ -316,6 +320,7 @@ export default function AssessmentForm() {
       const imgWidth = 210; // A4 width in mm
       const margin = 10; // margin in mm
       const contentWidth = imgWidth - (2 * margin);
+      const xOffset = (imgWidth - contentWidth) / 2;
       
       let currentY = margin;
 
@@ -348,7 +353,7 @@ export default function AssessmentForm() {
           currentY = margin;
         }
 
-        pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'JPEG', xOffset, currentY, contentWidth, imgHeight, undefined, 'FAST');
         currentY += imgHeight + 5; // Add small gap between sections
       }
 
@@ -713,7 +718,7 @@ export default function AssessmentForm() {
           <div>
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-blue-500" />
-              Galería Fotográfica (Máx. 3)
+              Imágenes (Máx. 3)
             </h3>
             
             <div className="space-y-4">
@@ -948,9 +953,9 @@ export default function AssessmentForm() {
                   <Activity className="w-5 h-5" />
                   8. Valoración Física
                 </h3>
-                <div className="w-full h-[250px]">
+                <div className="w-full h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="60%" data={radarData}>
                       <PolarGrid stroke="#e5e7eb" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#374151', fontSize: 11, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} />
@@ -972,9 +977,9 @@ export default function AssessmentForm() {
                   <Brain className="w-5 h-5" />
                   9. Estilo de Vida
                 </h3>
-                <div className="w-full h-[250px]">
+                <div className="w-full h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={lifestyleData}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="60%" data={lifestyleData}>
                       <PolarGrid stroke="#e5e7eb" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#374151', fontSize: 11, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} />
@@ -1014,7 +1019,7 @@ export default function AssessmentForm() {
                   <div className="bg-green-100 p-2 rounded-lg text-green-700">
                     <ImageIcon className="w-6 h-6" />
                   </div>
-                  <h2 className="text-xl font-bold text-green-800">11. Galería Fotográfica</h2>
+                  <h2 className="text-xl font-bold text-green-800">11. Imágenes</h2>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                   {formData.photos.map((photo, index) => (

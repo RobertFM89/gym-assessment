@@ -1,6 +1,6 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Download, Activity, User, Scale, Calendar, Target, FileText, Ruler, Heart, Brain, Dumbbell, ClipboardList, Plus, Trash2, Bold, Italic, Underline, Image as ImageIcon, X } from 'lucide-react';
+import { Download, Activity, User, Scale, Calendar, Target, FileText, Ruler, Heart, Brain, Dumbbell, ClipboardList, Plus, Trash2, Bold, Italic, Underline, Image as ImageIcon, X, Save, Trash } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import logo from '../assets/V_Blanco_verde.png';
@@ -82,55 +82,126 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
   );
 };
 
+const INITIAL_FORM_DATA = {
+  personal: {
+    name: '',
+    age: '',
+    weight: '',
+    height: '',
+    phone: '',
+    email: '',
+    date: new Date().toISOString().split('T')[0],
+    objectives: ''
+  },
+  pathologies: '',
+  lifestyle: {
+    description: '',
+    factors: [
+      { id: 'sleep', name: 'Sueño', value: 5 },
+      { id: 'nutrition', name: 'Nutrición', value: 5 },
+      { id: 'neat', name: 'NEAT', value: 5 },
+      { id: 'stress', name: 'Estrés', value: 5 },
+      { id: 'bodyComp', name: 'Comp. Corporal', value: 5 }
+    ]
+  },
+  capabilities: [
+    { id: 'flexibilidad', name: 'Flexibilidad', value: 5 },
+    { id: 'cardio', name: 'Cardio', value: 5 },
+    { id: 'equilibrio', name: 'Equilibrio', value: 5 },
+     { id: 'resistencia', name: 'Resistencia', value: 5 },
+    { id: 'fuerza', name: 'Fuerza', value: 5 },
+   
+    
+  ],
+  functionalAssessment: '',
+  strengthTest: '',
+  composition: [
+    { id: 'weight', name: 'Peso', value: '', unit: 'kg' },
+    { id: 'fatPercentage', name: '% Masa Grasa', value: '', unit: '%' },
+    { id: 'muscleMass', name: 'Masa Muscular', value: '', unit: 'kg' },
+    { id: 'waterPercentage', name: '% Agua Corporal', value: '', unit: '%' },
+    { id: 'boneMass', name: 'Masa Ósea', value: '', unit: 'kg' },
+    { id: 'metabolicAge', name: 'Edad Metabólica', value: '', unit: 'años' },
+    { id: 'visceralFat', name: 'Grasa Visceral', value: '', unit: '' }
+  ],
+  workProposal: '',
+  photos: []
+};
+
 export default function AssessmentForm() {
-  const [formData, setFormData] = useState({
-    personal: {
-      name: '',
-      age: '',
-      weight: '',
-      height: '',
-      phone: '',
-      email: '',
-      date: new Date().toISOString().split('T')[0],
-      objectives: ''
-    },
-    pathologies: '',
-    lifestyle: {
-      description: '',
-      factors: [
-        { id: 'sleep', name: 'Sueño', value: 5 },
-        { id: 'nutrition', name: 'Nutrición', value: 5 },
-        { id: 'neat', name: 'NEAT', value: 5 },
-        { id: 'stress', name: 'Estrés', value: 5 },
-        { id: 'bodyComp', name: 'Comp. Corporal', value: 5 }
-      ]
-    },
-    capabilities: [
-      { id: 'flexibilidad', name: 'Flexibilidad', value: 5 },
-      { id: 'cardio', name: 'Cardio', value: 5 },
-      { id: 'equilibrio', name: 'Equilibrio', value: 5 },
-       { id: 'resistencia', name: 'Resistencia', value: 5 },
-      { id: 'fuerza', name: 'Fuerza', value: 5 },
-     
-      
-    ],
-    functionalAssessment: '',
-    strengthTest: '',
-    composition: [
-      { id: 'weight', name: 'Peso', value: '', unit: 'kg' },
-      { id: 'fatPercentage', name: '% Masa Grasa', value: '', unit: '%' },
-      { id: 'muscleMass', name: 'Masa Muscular', value: '', unit: 'kg' },
-      { id: 'waterPercentage', name: '% Agua Corporal', value: '', unit: '%' },
-      { id: 'boneMass', name: 'Masa Ósea', value: '', unit: 'kg' },
-      { id: 'metabolicAge', name: 'Edad Metabólica', value: '', unit: 'años' },
-      { id: 'visceralFat', name: 'Grasa Visceral', value: '', unit: '' }
-    ],
-    workProposal: '',
-    photos: []
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [showDraftNotification, setShowDraftNotification] = useState(false);
   const reportRef = useRef(null);
+  const STORAGE_KEY = 'assessmentFormDraft';
+  const LAST_SAVED_KEY = 'assessmentFormLastSaved';
+
+  // Cargar borrador guardado al montar el componente
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem(STORAGE_KEY);
+      const lastSaved = localStorage.getItem(LAST_SAVED_KEY);
+      
+      if (savedDraft) {
+        const parsedDraft = JSON.parse(savedDraft);
+        setFormData(parsedDraft);
+        setHasDraft(true);
+        if (lastSaved) {
+          setLastSavedTime(new Date(lastSaved));
+        }
+        // Mostrar notificación de borrador recuperado
+        setShowDraftNotification(true);
+        setTimeout(() => setShowDraftNotification(false), 5000);
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error);
+    }
+  }, []);
+
+  // Función para guardar en localStorage
+  const saveDraftToLocalStorage = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+      localStorage.setItem(LAST_SAVED_KEY, new Date().toISOString());
+      setHasDraft(true);
+      setLastSavedTime(new Date());
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    }
+  };
+
+  // Guardar borrador manualmente
+  const handleManualSave = () => {
+    saveDraftToLocalStorage();
+    alert('✓ Borrador guardado correctamente');
+  };
+
+  // Limpiar borrador
+  const handleClearDraft = () => {
+    if (confirm('¿Está seguro que desea eliminar el borrador guardado y limpiar todo el formulario? Esta acción no se puede deshacer.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LAST_SAVED_KEY);
+      setFormData(INITIAL_FORM_DATA);
+      setHasDraft(false);
+      setLastSavedTime(null);
+      alert('✓ Borrador eliminado y formulario limpiado');
+    }
+  };
+
+  // Función para formatear la hora de último guardado
+  const getLastSavedDisplay = () => {
+    if (!lastSavedTime) return '';
+    const now = new Date();
+    const diff = Math.floor((now - lastSavedTime) / 1000);
+    
+    if (diff < 60) return 'hace unos segundos';
+    if (diff < 3600) return `hace ${Math.floor(diff / 60)} minutos`;
+    if (diff < 86400) return `hace ${Math.floor(diff / 3600)} horas`;
+    return lastSavedTime.toLocaleDateString();
+  };
 
   const handlePersonalChange = (e) => {
     const { name, value } = e.target;
@@ -372,8 +443,40 @@ export default function AssessmentForm() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
+      {/* Notificación de Borrador Recuperado */}
+      {showDraftNotification && (
+        <div className="fixed top-4 left-4 right-4 z-50 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-lg shadow-lg animate-slide-in">
+          <div className="flex items-center gap-2">
+            <Save className="w-5 h-5" />
+            <span className="font-medium">Borrador recuperado - Puedes continuar donde lo dejaste</span>
+          </div>
+        </div>
+      )}
+
       {/* Form Section */}
       <div className="w-full lg:w-1/2 bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-fit">
+        {/* Draft Status Bar */}
+        {hasDraft && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="text-sm">
+                  <p className="font-semibold text-blue-900">Borrador guardado</p>
+                  <p className="text-xs text-blue-700">{getLastSavedDisplay()}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleClearDraft}
+                className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded flex items-center gap-1 transition-colors"
+              >
+                <Trash className="w-4 h-4" />
+                Eliminar borrador
+              </button>
+            </div>
+          </div>
+        )}
+
         <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
           <User className="w-6 h-6 text-blue-500" />
           Datos del Cliente
@@ -784,6 +887,24 @@ export default function AssessmentForm() {
               </>
             )}
           </button>
+
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <button
+              onClick={handleManualSave}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            >
+              <Save className="w-4 h-4" />
+              Guardar Borrador
+            </button>
+            <button
+              onClick={handleClearDraft}
+              disabled={!hasDraft}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed"
+            >
+              <Trash className="w-4 h-4" />
+              Limpiar
+            </button>
+          </div>
         </div>
       </div>
 
